@@ -1,6 +1,6 @@
 # Todo list app backend
 
-It is a pet project to learn GOlang, since emergence of coding agents made me less of a coder. I am not against it, since I use a lot of them in my daily work, but outside of work I enjoy learning new things and also enjoy developing.
+It is a pet project to learn GOlang (I am also learning Rust, but too slow to do something yet), since emergence of coding agents made me less of a coder. I am not against it, since I use a lot of them in my daily work, but outside of work I enjoy learning new things and relax by developing, not vibe-coding.
 
 In this project: 
 - Go files are developed from scratch, the "old" ways, by reading !StackOverflow and official documentation. Crazy right?! 
