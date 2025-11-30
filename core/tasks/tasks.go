@@ -1,6 +1,9 @@
 package tasks
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type TaskState int
 
@@ -18,9 +21,14 @@ func (ts TaskState) String() string {
 	return stateName[ts]
 }
 
-type TodoItem struct {
-	Task        string    `json:"name"`
+type Task struct {
+	Id          int64     `json:"id"`
+	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	State       TaskState `json:"status"`
-	CreatedAt   time.Time
+	Status      TaskState `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+func (t Task) String() string {
+	return fmt.Sprintf("task: %d %s d: %s", t.Id, t.Title, t.Description)
 }
