@@ -29,6 +29,13 @@ func (tr *TasksRepository) GetList() []Task {
 	return tasks
 }
 
+func (tr *TasksRepository) GetOne(id int64) *Task {
+	row := tr.session.QueryRow("select id, title, description from tasks where id = $1", id)
+	var newTask Task
+	row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
+	return &newTask
+}
+
 func (tr *TasksRepository) Add(t *Task) *Task {
 	row := tr.session.QueryRow("insert into tasks (title, description) values ($1, $2) returning id, title, description", t.Title, t.Description)
 	var newTask Task

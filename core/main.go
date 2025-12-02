@@ -36,7 +36,8 @@ func processOp(opsPtr *string, id int64, item *tasks.Task, tasksRepo *tasks.Task
 	case "update":
 		fmt.Println("update")
 	case "getOne":
-		fmt.Println("getOne")
+		result := tasksRepo.GetOne(id)
+		outputToJson(result)
 	default:
 		fmt.Println("Available ops are: add, list, delete")
 	}
