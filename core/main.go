@@ -3,8 +3,8 @@ package main
 import (
 	"db"
 	"encoding/json"
-	"flag"
 	"fmt"
+	"net/http"
 	"tasks"
 	"time"
 )
@@ -44,26 +44,36 @@ func processOp(opsPtr *string, id int64, item *tasks.Task, tasksRepo *tasks.Task
 
 }
 
-func outputToJson(item *tasks.Task) {
+func outputToJson(item *tasks.Task) []byte {
 	itemJson, _ := json.Marshal(item)
-	fmt.Println(string(itemJson))
+	return itemJson
+}
+
+func outputToJsonList(items []tasks.Task) []byte {
+	itemsJson, _ := json.Marshal(tasks.TaskList{Items: items})
+	return itemsJson
+}
+
+func hello(w http.ResponseWriter, req *http.Request) {
+	dbSession := db.CreateSession()
+	defer db.CloseSession(dbSession)
+	tasksRepo := tasks.InitRepo(dbSession)
+	items := tasksRepo.GetList()
+	res := outputToJsonList(items)
+	fmt.Fprintf(w, string(res))
 }
 
 func main() {
-	opsPtr := flag.String("op", "default", "operation for the todo list")
-	taskPtr := flag.String("task", "<your task name>", "task name")
-	deleteId := flag.Int64("id", -1, "Delete Id")
-	descriptionPtr := flag.String("des", "<your description>", "please provide description")
-	flag.Parse()
-	// fetch postgresurl conn string
-	// connStr := os.Getenv("POSTGRES_URL")
-	psqlInfo := fmt.Sprintf("host=localhost port=5430 user=test " +
-		"password=test dbname=database sslmode=disable")
-	fmt.Println(psqlInfo)
-	dbSession := db.CreateSession(psqlInfo)
-	defer db.CloseSession(dbSession)
-	tasksRepo := tasks.InitRepo(dbSession)
-	todoItem1 := createTask(taskPtr, descriptionPtr)
-	toggleTaskStatus(todoItem1)
-	processOp(opsPtr, *deleteId, todoItem1, tasksRepo)
+	// opsPtr := flag.String("op", "default", "operation for the todo list")
+	// taskPtr := flag.String("task", "<your task name>", "task name")
+	// deleteId := flag.Int64("id", -1, "Delete Id")
+	// descriptionPtr := flag.String("des", "<your description>", "please provide description")
+	// flag.Parse()
+
+	http.HandleFunc("/", hello)
+	fmt.Println("Starting server at http://localhost:8090")
+	http.ListenAndServe(":8090", nil)
+	// todoItem1 := createTask(taskPtr, descriptionPtr)
+	// toggleTaskStatus(todoItem1)
+	// processOp(opsPtr, *deleteId, todoItem1, tasksRepo)
 }

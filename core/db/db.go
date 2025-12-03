@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -9,14 +10,15 @@ import (
 
 type DBSession struct {
 	*sql.DB
-	connStr string
 }
 
-func CreateSession(connStr string) *DBSession {
-	if conn, err := sql.Open("postgres", connStr); err != nil {
+func CreateSession() *DBSession {
+	psqlInfo := fmt.Sprintf("host=localhost port=5430 user=test " +
+		"password=test dbname=database sslmode=disable")
+	if conn, err := sql.Open("postgres", psqlInfo); err != nil {
 		log.Fatal("Issue while opening conn", err)
 	} else {
-		return &DBSession{conn, connStr}
+		return &DBSession{conn}
 	}
 	return nil
 }
