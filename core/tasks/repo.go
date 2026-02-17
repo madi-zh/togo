@@ -58,3 +58,13 @@ func (tr *TasksRepository) Delete(id int64) bool {
 	}
 	return false
 }
+
+func (tr *TasksRepository) Update(id int64, t *Task) *Task {
+	if id <= 0 {
+		return nil
+	}
+	row := tr.session.QueryRow("update tasks set title = $1, description = $2 where id = $3 returning id, title, description", t.Title, t.Description, id)
+	var updatedTask Task
+	row.Scan(updatedTask)
+	return &updatedTask
+}

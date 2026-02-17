@@ -72,6 +72,29 @@ func deleteTask(w http.ResponseWriter, req *http.Request) {
 	jsonResponse(w, nil, 204)
 }
 
+func updateTask(w http.ResponseWriter, req *http.Request) {
+	var task tasks.Task
+	taskId, err := strconv.ParseInt(req.PathValue("id"), 10, 64)
+	if taskId < 1 || err != nil {
+		jsonError(w, "Wrong id", http.StatusBadRequest)
+		return
+	}
+	defer req.Body.Close()
+	err = json.NewDecoder(req.Body).Decode(&task)
+	if err != nil {
+		jsonError(w, "Failed to parse body", http.StatusBadRequest)
+	}
+
+	dbSession := db.CreateSession()
+	defer db.CloseSession(dbSession)
+	tasksRepo := tasks.InitRepo(dbSession)
+
+	updatedTask := tasksRepo.Update(taskId, &task)
+
+	jsonResponse(w, updatedTask, 200)
+
+}
+
 func jsonError(w http.ResponseWriter, message string, status int) {
 	response := map[string]string{
 		"error": message,
@@ -96,6 +119,7 @@ func main() {
 	router.HandleFunc("POST /tasks/", createTask)
 	router.HandleFunc("GET /tasks/{id}", getTask)
 	router.HandleFunc("DELETE /tasks/{id}", deleteTask)
+	router.HandleFunc("PUT /tasks/{id}", updateTask)
 	fmt.Println("Starting server at http://localhost:8090")
 	http.ListenAndServe(":8090", router)
 }
