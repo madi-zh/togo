@@ -65,6 +65,6 @@ func (tr *TasksRepository) Update(id int64, t *Task) *Task {
 	}
 	row := tr.session.QueryRow("update tasks set title = $1, description = $2 where id = $3 returning id, title, description", t.Title, t.Description, id)
 	var updatedTask Task
-	row.Scan(updatedTask)
+	row.Scan(&updatedTask.Id, &updatedTask.Title, &updatedTask.Description)
 	return &updatedTask
 }

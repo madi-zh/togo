@@ -83,6 +83,7 @@ func updateTask(w http.ResponseWriter, req *http.Request) {
 	err = json.NewDecoder(req.Body).Decode(&task)
 	if err != nil {
 		jsonError(w, "Failed to parse body", http.StatusBadRequest)
+		return
 	}
 
 	dbSession := db.CreateSession()
