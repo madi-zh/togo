@@ -5,6 +5,14 @@ import (
 	"fmt"
 )
 
+type Repository interface {
+	GetList() []Task
+	GetOne(id int64) []Task
+	Add(t *Task) *Task
+	Delete(id int64) bool
+	Update(id int64, t *Task)
+}
+
 type TasksRepository struct {
 	session *db.DBSession
 }
