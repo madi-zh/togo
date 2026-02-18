@@ -7,10 +7,10 @@ import (
 
 type Repository interface {
 	GetList() []Task
-	GetOne(id int64) *Task
-	Add(t *Task) *Task
+	GetOne(id int64) (*Task, error)
+	Add(t *Task) (*Task, error)
 	Delete(id int64) bool
-	Update(id int64, t *Task) *Task
+	Update(id int64, t *Task) (*Task, error)
 }
 
 type TasksRepository struct {
@@ -37,18 +37,24 @@ func (tr *TasksRepository) GetList() []Task {
 	return tasks
 }
 
-func (tr *TasksRepository) GetOne(id int64) *Task {
+func (tr *TasksRepository) GetOne(id int64) (*Task, error) {
 	row := tr.session.QueryRow("select id, title, description from tasks where id = $1", id)
 	var newTask Task
-	row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
-	return &newTask
+	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
+	if err != nil {
+		return nil, err
+	}
+	return &newTask, nil
 }
 
-func (tr *TasksRepository) Add(t *Task) *Task {
+func (tr *TasksRepository) Add(t *Task) (*Task, error) {
 	row := tr.session.QueryRow("insert into tasks (title, description) values ($1, $2) returning id, title, description", t.Title, t.Description)
 	var newTask Task
-	row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
-	return &newTask
+	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
+	if err != nil {
+		return nil, err
+	}
+	return &newTask, nil
 }
 
 func (tr *TasksRepository) Delete(id int64) bool {
@@ -67,12 +73,15 @@ func (tr *TasksRepository) Delete(id int64) bool {
 	return false
 }
 
-func (tr *TasksRepository) Update(id int64, t *Task) *Task {
+func (tr *TasksRepository) Update(id int64, t *Task) (*Task, error) {
 	if id <= 0 {
-		return nil
+		return nil, nil
 	}
 	row := tr.session.QueryRow("update tasks set title = $1, description = $2 where id = $3 returning id, title, description", t.Title, t.Description, id)
 	var updatedTask Task
-	row.Scan(&updatedTask.Id, &updatedTask.Title, &updatedTask.Description)
-	return &updatedTask
+	err := row.Scan(&updatedTask.Id, &updatedTask.Title, &updatedTask.Description)
+	if err != nil {
+		return nil, err
+	}
+	return &updatedTask, nil
 }
