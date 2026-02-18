@@ -7,10 +7,10 @@ import (
 
 type Repository interface {
 	GetList() []Task
-	GetOne(id int64) []Task
+	GetOne(id int64) *Task
 	Add(t *Task) *Task
 	Delete(id int64) bool
-	Update(id int64, t *Task)
+	Update(id int64, t *Task) *Task
 }
 
 type TasksRepository struct {

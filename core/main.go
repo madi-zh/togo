@@ -9,11 +9,12 @@ import (
 	"tasks"
 )
 
-func getTasks(w http.ResponseWriter, req *http.Request) {
-	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
-	tasksRepo := tasks.InitRepo(dbSession)
-	items := tasksRepo.GetList()
+type Server struct {
+	repo tasks.Repository
+}
+
+func (s *Server) getTasks(w http.ResponseWriter, req *http.Request) {
+	items := s.repo.GetList()
 	response := map[string]any{
 		"message": "Done",
 		"items":   items,
@@ -21,7 +22,7 @@ func getTasks(w http.ResponseWriter, req *http.Request) {
 	jsonResponse(w, response, 200)
 }
 
-func createTask(w http.ResponseWriter, req *http.Request) {
+func (s *Server) createTask(w http.ResponseWriter, req *http.Request) {
 	var task tasks.Task
 	defer req.Body.Close()
 	err := json.NewDecoder(req.Body).Decode(&task)
@@ -30,30 +31,22 @@ func createTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Something wrong", http.StatusBadRequest)
 		return
 	}
-	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
-	tasksRepo := tasks.InitRepo(dbSession)
 
-	createdTask := tasksRepo.Add(&task)
+	createdTask := s.repo.Add(&task)
 	jsonResponse(w, &createdTask, 200)
 }
 
-func getTask(w http.ResponseWriter, req *http.Request) {
+func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
 	taskId, err := strconv.ParseInt(req.PathValue("id"), 10, 64)
 	if err != nil {
 		jsonError(w, "Id is not int", http.StatusBadRequest)
 		return
 	}
-	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
-
-	tasksRepo := tasks.InitRepo(dbSession)
-
-	task := tasksRepo.GetOne(taskId)
+	task := s.repo.GetOne(taskId)
 	jsonResponse(w, task, 200)
 }
 
-func deleteTask(w http.ResponseWriter, req *http.Request) {
+func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	taskId, err := strconv.ParseInt(req.PathValue("id"), 10, 64)
 	if err != nil {
 		jsonError(w, "Id is not int", http.StatusBadRequest)
@@ -63,16 +56,12 @@ func deleteTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "wrong taskid", http.StatusBadRequest)
 		return
 	}
-	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
 
-	tasksRepo := tasks.InitRepo(dbSession)
-
-	tasksRepo.Delete(taskId)
+	s.repo.Delete(taskId)
 	jsonResponse(w, nil, 204)
 }
 
-func updateTask(w http.ResponseWriter, req *http.Request) {
+func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 	var task tasks.Task
 	taskId, err := strconv.ParseInt(req.PathValue("id"), 10, 64)
 	if taskId < 1 || err != nil {
@@ -86,11 +75,7 @@ func updateTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
-	tasksRepo := tasks.InitRepo(dbSession)
-
-	updatedTask := tasksRepo.Update(taskId, &task)
+	updatedTask := s.repo.Update(taskId, &task)
 
 	jsonResponse(w, updatedTask, 200)
 
@@ -116,11 +101,15 @@ func jsonResponse(w http.ResponseWriter, body any, status int) {
 
 func main() {
 	router := http.NewServeMux()
-	router.HandleFunc("GET /tasks/", getTasks)
-	router.HandleFunc("POST /tasks/", createTask)
-	router.HandleFunc("GET /tasks/{id}", getTask)
-	router.HandleFunc("DELETE /tasks/{id}", deleteTask)
-	router.HandleFunc("PUT /tasks/{id}", updateTask)
+	dbSession := db.CreateSession()
+	defer db.CloseSession(dbSession)
+	s := &Server{repo: tasks.InitRepo(dbSession)}
+
+	router.HandleFunc("GET /tasks/", s.getTasks)
+	router.HandleFunc("POST /tasks/", s.createTask)
+	router.HandleFunc("GET /tasks/{id}", s.getTask)
+	router.HandleFunc("DELETE /tasks/{id}", s.deleteTask)
+	router.HandleFunc("PUT /tasks/{id}", s.updateTask)
 	fmt.Println("Starting server at http://localhost:8090")
 	http.ListenAndServe(":8090", router)
 }
