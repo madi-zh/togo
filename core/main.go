@@ -1,4 +1,4 @@
-package main
+package togo
 
 import (
 	"db"
@@ -32,7 +32,11 @@ func (s *Server) createTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	createdTask := s.repo.Add(&task)
+	createdTask, err := s.repo.Add(&task)
+	if err != nil {
+		jsonError(w, "Couldn't find", http.StatusBadRequest)
+		return
+	}
 	jsonResponse(w, &createdTask, 200)
 }
 
@@ -42,7 +46,11 @@ func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Id is not int", http.StatusBadRequest)
 		return
 	}
-	task := s.repo.GetOne(taskId)
+	task, err := s.repo.GetOne(taskId)
+	if err != nil {
+		jsonError(w, "Couldn't find", http.StatusBadRequest)
+		return
+	}
 	jsonResponse(w, task, 200)
 }
 
@@ -75,8 +83,11 @@ func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedTask := s.repo.Update(taskId, &task)
-
+	updatedTask, err := s.repo.Update(taskId, &task)
+	if err != nil {
+		jsonError(w, "Couldn't find", http.StatusBadRequest)
+		return
+	}
 	jsonResponse(w, updatedTask, 200)
 
 }

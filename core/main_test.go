@@ -1,9 +1,12 @@
-package main
+package togo
 
 import (
 	"database/sql"
+	"encoding/json"
+	"net/http/httptest"
 	"slices"
 	"tasks"
+	"testing"
 )
 
 type MockRepo struct {
@@ -47,4 +50,28 @@ func (r *MockRepo) Delete(id int64) bool {
 		}
 	}
 	return false
+}
+
+func TestGetTasks(t *testing.T) {
+	mockRepo := &MockRepo{
+		tasks: []tasks.Task{
+			{Id: 1, Title: "test", Description: "Description"},
+		},
+	}
+	s := &Server{repo: mockRepo}
+
+	req := httptest.NewRequest("GET", "/tasks/", nil)
+	w := httptest.NewRecorder()
+	s.getTasks(w, req)
+	result := w.Result()
+	if result.StatusCode != 200 {
+		t.Errorf("Expected 200, got %d", result.StatusCode)
+	}
+
+	defer result.Body.Close()
+	var task tasks.Task
+	err := json.NewDecoder(result.Body).Decode(&task)
+	if err != nil {
+		t.Errorf("Got error: %d", err)
+	}
 }

@@ -1,4 +1,4 @@
-module main
+module togo
 
 require tasks v1.0.0
 
