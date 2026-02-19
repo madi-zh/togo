@@ -1,4 +1,4 @@
-package togo
+package main
 
 import (
 	"db"

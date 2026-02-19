@@ -69,9 +69,18 @@ func TestGetTasks(t *testing.T) {
 	}
 
 	defer result.Body.Close()
-	var task tasks.Task
-	err := json.NewDecoder(result.Body).Decode(&task)
+	var response struct {
+		Message string       `json:"message"`
+		Items   []tasks.Task `json:"items"`
+	}
+	err := json.NewDecoder(result.Body).Decode(&response)
 	if err != nil {
-		t.Errorf("Got error: %d", err)
+		t.Errorf("Got error: %v", err)
+	}
+
+	for i, task := range response.Items {
+		if mockRepo.tasks[i].Id != task.Id {
+			t.Errorf("Got error: %d", i)
+		}
 	}
 }
