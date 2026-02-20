@@ -19,5 +19,5 @@ func main() {
 	router.HandleFunc("DELETE /tasks/{id}", s.deleteTask)
 	router.HandleFunc("PUT /tasks/{id}", s.updateTask)
 	fmt.Println("Starting server at http://localhost:8090")
-	http.ListenAndServe(":8090", router)
+	http.ListenAndServe(":8090", logging(router))
 }

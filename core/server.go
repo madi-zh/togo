@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"tasks"
+	"time"
 )
 
 type Server struct {
@@ -114,4 +116,15 @@ func jsonResponse(w http.ResponseWriter, body any, status int) {
 
 func parseId(req *http.Request) (int64, error) {
 	return strconv.ParseInt(req.PathValue("id"), 10, 64)
+}
+
+func logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		start := time.Now()
+		fmt.Printf("Method: %s\n", req.Method)
+		fmt.Printf("Path: %s\n", req.URL.Path)
+		next.ServeHTTP(w, req)
+		duration := time.Since(start)
+		fmt.Printf("Duration %v\n", duration)
+	})
 }
