@@ -29,10 +29,6 @@ type Task struct {
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
-type TaskList struct {
-	Items []Task `json:"items"`
-}
-
 func (t Task) String() string {
 	return fmt.Sprintf("task: %d %s d: %s", t.Id, t.Title, t.Description)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"slices"
 	"tasks"
@@ -113,10 +114,12 @@ func TestGetTask(t *testing.T) {
 			if w.Result().StatusCode != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, w.Result().StatusCode)
 			}
-			var responseTask tasks.Task
-			err := json.NewDecoder(w.Result().Body).Decode(&responseTask)
-			if err != nil {
-				t.Errorf("Error fetching task")
+			if w.Result().StatusCode == http.StatusOK {
+				var responseTask tasks.Task
+				err := json.NewDecoder(w.Result().Body).Decode(&responseTask)
+				if err != nil {
+					t.Errorf("Error fetching task")
+				}
 			}
 		})
 	}
