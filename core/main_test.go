@@ -13,8 +13,8 @@ type MockRepo struct {
 	tasks []tasks.Task
 }
 
-func (r *MockRepo) GetList() []tasks.Task {
-	return r.tasks
+func (r *MockRepo) GetList() ([]tasks.Task, error) {
+	return r.tasks, nil
 }
 
 func (r *MockRepo) GetOne(id int64) (*tasks.Task, error) {

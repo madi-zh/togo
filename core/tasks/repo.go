@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	GetList() []Task
+	GetList() ([]Task, error)
 	GetOne(id int64) (*Task, error)
 	Add(t *Task) (*Task, error)
 	Delete(id int64) bool
@@ -21,9 +21,13 @@ func InitRepo(session *db.DBSession) *TasksRepository {
 	return &TasksRepository{session: session}
 }
 
-func (tr *TasksRepository) GetList() []Task {
+func (tr *TasksRepository) GetList() ([]Task, error) {
 	var tasks []Task
 	rows, err := tr.session.Query("select id, title, description from tasks")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 	for rows.Next() {
 		var readTask Task
 		if err := rows.Scan(&readTask.Id, &readTask.Title, &readTask.Description); err != nil {
@@ -31,10 +35,7 @@ func (tr *TasksRepository) GetList() []Task {
 		}
 		tasks = append(tasks, readTask)
 	}
-	if err != nil {
-		return tasks
-	}
-	return tasks
+	return tasks, nil
 }
 
 func (tr *TasksRepository) GetOne(id int64) (*Task, error) {

@@ -12,12 +12,16 @@ type Server struct {
 }
 
 func (s *Server) getTasks(w http.ResponseWriter, req *http.Request) {
-	items := s.repo.GetList()
+	items, err := s.repo.GetList()
+	if err != nil {
+		jsonError(w, "Issue while fetching", http.StatusInternalServerError)
+		return
+	}
 	response := map[string]any{
 		"message": "Done",
 		"items":   items,
 	}
-	jsonResponse(w, response, 200)
+	jsonResponse(w, response, http.StatusOK)
 }
 
 func (s *Server) createTask(w http.ResponseWriter, req *http.Request) {
@@ -35,7 +39,7 @@ func (s *Server) createTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
 	}
-	jsonResponse(w, &createdTask, 200)
+	jsonResponse(w, &createdTask, http.StatusOK)
 }
 
 func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
@@ -49,7 +53,7 @@ func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
 	}
-	jsonResponse(w, task, 200)
+	jsonResponse(w, task, http.StatusOK)
 }
 
 func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
@@ -64,7 +68,7 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	s.repo.Delete(taskId)
-	jsonResponse(w, nil, 204)
+	jsonResponse(w, nil, http.StatusNoContent)
 }
 
 func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
@@ -86,7 +90,7 @@ func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
 	}
-	jsonResponse(w, updatedTask, 200)
+	jsonResponse(w, updatedTask, http.StatusOK)
 
 }
 
