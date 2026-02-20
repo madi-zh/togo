@@ -10,7 +10,7 @@ import (
 func main() {
 	router := http.NewServeMux()
 	dbSession := db.CreateSession()
-	defer db.CloseSession(dbSession)
+	defer dbSession.Close()
 	s := &Server{repo: tasks.InitRepo(dbSession)}
 
 	router.HandleFunc("GET /tasks/", s.getTasks)
