@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"slices"
-	"strconv"
 	"tasks"
 	"testing"
 )
@@ -94,19 +93,32 @@ func TestGetTask(t *testing.T) {
 	}
 	s := &Server{repo: mockRepo}
 
-	req := httptest.NewRequest("GET", "/tasks/{id}", nil)
-	req.SetPathValue("id", strconv.FormatInt(mockRepo.tasks[0].Id, 10))
-	w := httptest.NewRecorder()
-	s.getTask(w, req)
-	result := w.Result()
-	if result.StatusCode != 200 {
-		t.Errorf("Expected 200, got %d", result.StatusCode)
+	tests := []struct {
+		name           string
+		id             string
+		expectedStatus int
+	}{
+		{"valid task", "1", 200},
+		{"not found", "999", 400},
+		{"invalid id", "abc", 400},
 	}
-	defer result.Body.Close()
-	var responseTask tasks.Task
 
-	err := json.NewDecoder(result.Body).Decode(&responseTask)
-	if err != nil {
-		t.Errorf("Error fetching task")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/tasks/"+tt.id, nil)
+			req.SetPathValue("id", tt.id)
+			w := httptest.NewRecorder()
+
+			s.getTask(w, req)
+			if w.Result().StatusCode != tt.expectedStatus {
+				t.Errorf("expected %d, got %d", tt.expectedStatus, w.Result().StatusCode)
+			}
+			var responseTask tasks.Task
+			err := json.NewDecoder(w.Result().Body).Decode(&responseTask)
+			if err != nil {
+				t.Errorf("Error fetching task")
+			}
+		})
 	}
+
 }
