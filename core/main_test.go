@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"slices"
+	"strconv"
 	"tasks"
 	"testing"
 )
@@ -82,5 +83,30 @@ func TestGetTasks(t *testing.T) {
 		if mockRepo.tasks[i].Id != task.Id {
 			t.Errorf("Got error: %d", i)
 		}
+	}
+}
+
+func TestGetTask(t *testing.T) {
+	mockRepo := &MockRepo{
+		tasks: []tasks.Task{
+			{Id: 1, Title: "test", Description: "Description"},
+		},
+	}
+	s := &Server{repo: mockRepo}
+
+	req := httptest.NewRequest("GET", "/tasks/{id}", nil)
+	req.SetPathValue("id", strconv.FormatInt(mockRepo.tasks[0].Id, 10))
+	w := httptest.NewRecorder()
+	s.getTask(w, req)
+	result := w.Result()
+	if result.StatusCode != 200 {
+		t.Errorf("Expected 200, got %d", result.StatusCode)
+	}
+	defer result.Body.Close()
+	var responseTask tasks.Task
+
+	err := json.NewDecoder(result.Body).Decode(&responseTask)
+	if err != nil {
+		t.Errorf("Error fetching task")
 	}
 }
