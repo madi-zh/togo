@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -14,11 +15,17 @@ type MockRepo struct {
 	tasks []tasks.Task
 }
 
-func (r *MockRepo) GetList() ([]tasks.Task, error) {
+func (r *MockRepo) GetList(ctx context.Context) ([]tasks.Task, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	return r.tasks, nil
 }
 
-func (r *MockRepo) GetOne(id int64) (*tasks.Task, error) {
+func (r *MockRepo) GetOne(ctx context.Context, id int64) (*tasks.Task, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	for i := 0; i < len(r.tasks); i++ {
 		if r.tasks[i].Id == id {
 			return &r.tasks[i], nil
@@ -27,12 +34,18 @@ func (r *MockRepo) GetOne(id int64) (*tasks.Task, error) {
 	return nil, sql.ErrNoRows
 }
 
-func (r *MockRepo) Add(newTask *tasks.Task) (*tasks.Task, error) {
+func (r *MockRepo) Add(ctx context.Context, newTask *tasks.Task) (*tasks.Task, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	r.tasks = append(r.tasks, *newTask)
 	return &r.tasks[len(r.tasks)-1], nil
 }
 
-func (r *MockRepo) Update(id int64, updatedTask *tasks.Task) (*tasks.Task, error) {
+func (r *MockRepo) Update(ctx context.Context, id int64, updatedTask *tasks.Task) (*tasks.Task, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	for i := 0; i < len(r.tasks); i++ {
 		if r.tasks[i].Id == id {
 			r.tasks[i].Title = updatedTask.Title
@@ -43,14 +56,17 @@ func (r *MockRepo) Update(id int64, updatedTask *tasks.Task) (*tasks.Task, error
 	return nil, sql.ErrNoRows
 }
 
-func (r *MockRepo) Delete(id int64) bool {
+func (r *MockRepo) Delete(ctx context.Context, id int64) (bool, error) {
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
 	for i := 0; i < len(r.tasks); i++ {
 		if r.tasks[i].Id == id {
 			r.tasks = slices.Delete(r.tasks, i, i+1)
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func TestGetTasks(t *testing.T) {

@@ -1,16 +1,17 @@
 package tasks
 
 import (
+	"context"
 	"db"
 	"fmt"
 )
 
 type Repository interface {
-	GetList() ([]Task, error)
-	GetOne(id int64) (*Task, error)
-	Add(t *Task) (*Task, error)
-	Delete(id int64) bool
-	Update(id int64, t *Task) (*Task, error)
+	GetList(ctx context.Context) ([]Task, error)
+	GetOne(ctx context.Context, id int64) (*Task, error)
+	Add(ctx context.Context, t *Task) (*Task, error)
+	Delete(ctx context.Context, id int64) (bool, error)
+	Update(ctx context.Context, id int64, t *Task) (*Task, error)
 }
 
 type TasksRepository struct {
@@ -21,9 +22,9 @@ func InitRepo(session *db.DBSession) *TasksRepository {
 	return &TasksRepository{session: session}
 }
 
-func (tr *TasksRepository) GetList() ([]Task, error) {
+func (tr *TasksRepository) GetList(ctx context.Context) ([]Task, error) {
 	var tasks []Task
-	rows, err := tr.session.Query("select id, title, description from tasks")
+	rows, err := tr.session.QueryContext(ctx, "select id, title, description from tasks")
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +39,8 @@ func (tr *TasksRepository) GetList() ([]Task, error) {
 	return tasks, nil
 }
 
-func (tr *TasksRepository) GetOne(id int64) (*Task, error) {
-	row := tr.session.QueryRow("select id, title, description from tasks where id = $1", id)
+func (tr *TasksRepository) GetOne(ctx context.Context, id int64) (*Task, error) {
+	row := tr.session.QueryRowContext(ctx, "select id, title, description from tasks where id = $1", id)
 	var newTask Task
 	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
 	if err != nil {
@@ -48,8 +49,8 @@ func (tr *TasksRepository) GetOne(id int64) (*Task, error) {
 	return &newTask, nil
 }
 
-func (tr *TasksRepository) Add(t *Task) (*Task, error) {
-	row := tr.session.QueryRow("insert into tasks (title, description) values ($1, $2) returning id, title, description", t.Title, t.Description)
+func (tr *TasksRepository) Add(ctx context.Context, t *Task) (*Task, error) {
+	row := tr.session.QueryRowContext(ctx, "insert into tasks (title, description) values ($1, $2) returning id, title, description", t.Title, t.Description)
 	var newTask Task
 	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
 	if err != nil {
@@ -58,27 +59,26 @@ func (tr *TasksRepository) Add(t *Task) (*Task, error) {
 	return &newTask, nil
 }
 
-func (tr *TasksRepository) Delete(id int64) bool {
+func (tr *TasksRepository) Delete(ctx context.Context, id int64) (bool, error) {
 	if id <= 0 {
-		return false
+		return false, nil
 	}
-	result, err := tr.session.Exec("delete from tasks where id = $1", id)
+	result, err := tr.session.ExecContext(ctx, "delete from tasks where id = $1", id)
 	if err != nil {
-		fmt.Println("Issue while deletion:", err)
+		return false, err
 	}
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		fmt.Println("Issue while rowsAffected:", err)
+		return false, err
 	} else {
-		return rowsAffected == 1
+		return rowsAffected == 1, nil
 	}
-	return false
 }
 
-func (tr *TasksRepository) Update(id int64, t *Task) (*Task, error) {
+func (tr *TasksRepository) Update(ctx context.Context, id int64, t *Task) (*Task, error) {
 	if id <= 0 {
 		return nil, nil
 	}
-	row := tr.session.QueryRow("update tasks set title = $1, description = $2 where id = $3 returning id, title, description", t.Title, t.Description, id)
+	row := tr.session.QueryRowContext(ctx, "update tasks set title = $1, description = $2 where id = $3 returning id, title, description", t.Title, t.Description, id)
 	var updatedTask Task
 	err := row.Scan(&updatedTask.Id, &updatedTask.Title, &updatedTask.Description)
 	if err != nil {

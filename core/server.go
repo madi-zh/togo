@@ -14,7 +14,7 @@ type Server struct {
 }
 
 func (s *Server) getTasks(w http.ResponseWriter, req *http.Request) {
-	items, err := s.repo.GetList()
+	items, err := s.repo.GetList(req.Context())
 	if err != nil {
 		jsonError(w, "Issue while fetching", http.StatusInternalServerError)
 		return
@@ -36,7 +36,7 @@ func (s *Server) createTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	createdTask, err := s.repo.Add(&task)
+	createdTask, err := s.repo.Add(req.Context(), &task)
 	if err != nil {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
@@ -50,7 +50,7 @@ func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
 		jsonError(w, "Id is not int", http.StatusBadRequest)
 		return
 	}
-	task, err := s.repo.GetOne(taskId)
+	task, err := s.repo.GetOne(req.Context(), taskId)
 	if err != nil {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
@@ -69,7 +69,7 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	s.repo.Delete(taskId)
+	s.repo.Delete(req.Context(), taskId)
 	jsonResponse(w, nil, http.StatusNoContent)
 }
 
@@ -87,7 +87,7 @@ func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedTask, err := s.repo.Update(taskId, &task)
+	updatedTask, err := s.repo.Update(req.Context(), taskId, &task)
 	if err != nil {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
