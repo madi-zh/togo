@@ -76,6 +76,8 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	}
 	if isDeleted {
 		jsonResponse(w, nil, http.StatusNoContent)
+	} else {
+		jsonResponse(w, nil, http.StatusNotFound)
 	}
 }
 
