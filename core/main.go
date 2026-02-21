@@ -4,12 +4,20 @@ import (
 	"db"
 	"fmt"
 	"net/http"
+	"os"
 	"tasks"
 )
 
 func main() {
 	router := http.NewServeMux()
-	dbSession := db.CreateSession()
+	cfg := db.Config{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+	}
+	dbSession := db.CreateSession(cfg)
 	defer dbSession.Close()
 	s := &Server{repo: tasks.InitRepo(dbSession)}
 
