@@ -69,8 +69,13 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	s.repo.Delete(req.Context(), taskId)
-	jsonResponse(w, nil, http.StatusNoContent)
+	isDeleted, err := s.repo.Delete(req.Context(), taskId)
+	if err != nil {
+		jsonError(w, "Issue when deleting", http.StatusInternalServerError)
+	}
+	if isDeleted {
+		jsonResponse(w, nil, http.StatusNoContent)
+	}
 }
 
 func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
