@@ -16,7 +16,7 @@ type Server struct {
 func (s *Server) getTasks(w http.ResponseWriter, req *http.Request) {
 	items, err := s.repo.GetList(req.Context())
 	if err != nil {
-		jsonError(w, "Issue while fetching", http.StatusInternalServerError)
+		jsonError(w, fmt.Sprintf("Issue while fetching %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 	response := map[string]any{

@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"db"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"tasks"
+	"time"
 )
 
 func main() {
@@ -27,5 +31,18 @@ func main() {
 	router.HandleFunc("DELETE /tasks/{id}", s.deleteTask)
 	router.HandleFunc("PUT /tasks/{id}", s.updateTask)
 	fmt.Println("Starting server at http://localhost:8090")
-	http.ListenAndServe(":8090", logging(router))
+	server := http.Server{
+		Addr:    ":8090",
+		Handler: logging(router),
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	go func() {
+		server.ListenAndServe()
+	}()
+	<-ctx.Done()
+	fmt.Println("Shutting down...")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	server.Shutdown(shutdownCtx)
 }

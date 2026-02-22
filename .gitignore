@@ -1,2 +1,4 @@
 pgdata/
 go.sum
+
+*.env
