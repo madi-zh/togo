@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -31,7 +30,7 @@ func (r *MockRepo) GetOne(ctx context.Context, id int64) (*tasks.Task, error) {
 			return &r.tasks[i], nil
 		}
 	}
-	return nil, sql.ErrNoRows
+	return nil, &tasks.NotFoundError{Id: id}
 }
 
 func (r *MockRepo) Add(ctx context.Context, newTask *tasks.Task) (*tasks.Task, error) {
@@ -53,7 +52,7 @@ func (r *MockRepo) Update(ctx context.Context, id int64, updatedTask *tasks.Task
 			return &r.tasks[i], nil
 		}
 	}
-	return nil, sql.ErrNoRows
+	return nil, &tasks.NotFoundError{Id: id}
 }
 
 func (r *MockRepo) Delete(ctx context.Context, id int64) (bool, error) {
@@ -116,7 +115,7 @@ func TestGetTask(t *testing.T) {
 		expectedStatus int
 	}{
 		{"valid task", "1", 200},
-		{"not found", "999", 400},
+		{"not found", "999", 404},
 		{"invalid id", "abc", 400},
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -51,6 +52,11 @@ func (s *Server) getTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	task, err := s.repo.GetOne(req.Context(), taskId)
+	var notFound *tasks.NotFoundError
+	if errors.As(err, &notFound) {
+		jsonError(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	if err != nil {
 		jsonError(w, "Couldn't find", http.StatusBadRequest)
 		return
@@ -70,6 +76,11 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	isDeleted, err := s.repo.Delete(req.Context(), taskId)
+	var notFound *tasks.NotFoundError
+	if errors.As(err, &notFound) {
+		jsonError(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	if err != nil {
 		jsonError(w, "Issue when deleting", http.StatusInternalServerError)
 		return
@@ -96,8 +107,9 @@ func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	updatedTask, err := s.repo.Update(req.Context(), taskId, &task)
-	if err != nil {
-		jsonError(w, "Couldn't find", http.StatusBadRequest)
+	var notFound *tasks.NotFoundError
+	if errors.As(err, &notFound) {
+		jsonError(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	jsonResponse(w, updatedTask, http.StatusOK)
