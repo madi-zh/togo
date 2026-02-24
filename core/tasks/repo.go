@@ -44,6 +44,9 @@ func (tr *TasksRepository) GetOne(ctx context.Context, id int64) (*Task, error) 
 	row := tr.session.QueryRowContext(ctx, "select id, title, description from tasks where id = $1", id)
 	var newTask Task
 	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
+	if err == sql.ErrNoRows {
+		return nil, &NotFoundError{Id: id}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +57,6 @@ func (tr *TasksRepository) Add(ctx context.Context, t *Task) (*Task, error) {
 	row := tr.session.QueryRowContext(ctx, "insert into tasks (title, description) values ($1, $2) returning id, title, description", t.Title, t.Description)
 	var newTask Task
 	err := row.Scan(&newTask.Id, &newTask.Title, &newTask.Description)
-
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +68,8 @@ func (tr *TasksRepository) Delete(ctx context.Context, id int64) (bool, error) {
 		return false, nil
 	}
 	result, err := tr.session.ExecContext(ctx, "delete from tasks where id = $1", id)
-	if err == sql.ErrNoRows {
-		return false, &NotFoundError{Id: id}
+	if err != nil {
+		return false, err
 	}
 	if rowsAffected, err := result.RowsAffected(); err != nil {
 		return false, err

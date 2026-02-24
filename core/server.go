@@ -76,11 +76,6 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	isDeleted, err := s.repo.Delete(req.Context(), taskId)
-	var notFound *tasks.NotFoundError
-	if errors.As(err, &notFound) {
-		jsonError(w, err.Error(), http.StatusNotFound)
-		return
-	}
 	if err != nil {
 		jsonError(w, "Issue when deleting", http.StatusInternalServerError)
 		return
@@ -88,7 +83,7 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	if isDeleted {
 		jsonResponse(w, nil, http.StatusNoContent)
 	} else {
-		jsonResponse(w, nil, http.StatusNotFound)
+		jsonResponse(w, tasks.NotFoundError{Id: taskId}, http.StatusNotFound)
 	}
 }
 
@@ -110,6 +105,10 @@ func (s *Server) updateTask(w http.ResponseWriter, req *http.Request) {
 	var notFound *tasks.NotFoundError
 	if errors.As(err, &notFound) {
 		jsonError(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		jsonError(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 	jsonResponse(w, updatedTask, http.StatusOK)
